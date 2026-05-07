@@ -24,7 +24,7 @@ parse #ext-element-120 → timbrature     (es. "E07.33@01 U--.--")
       │
       ▼
 uscita_teorica = entrata + debito
-notifica_at    = uscita_teorica − NOTIFY_MINUTES_BEFORE
+notifica_at    = uscita_teorica − MIN_PREAVVISO_NOTIFICA_PUSH
       │
       ▼
 sleep(notifica_at − now)   ← processo dorme esattamente fino a quell'istante
@@ -91,8 +91,8 @@ openssl rand -hex 12
 | `TARGET_URL`            | ✅           | —                   | URL esatto della pagina presenze |
 | `NTFY_TOPIC`            | ✅           | —                   | Topic ntfy segreto               |
 | `NTFY_SERVER`           |              | `https://ntfy.sh`   | Server ntfy                      |
-| `COOKIES_FILE`          |              | `/app/cookies.json` | Percorso cookie nel container    |
-| `NOTIFY_MINUTES_BEFORE` |              | `5`                 | Minuti di preavviso              |
+| `COOKIES_FILE`          |              | `cookies.json`      | Percorso cookie nel container    |
+| `MIN_PREAVVISO_NOT_PUSH`|              | `10`                | Minuti di preavviso              |
 
 ---
 

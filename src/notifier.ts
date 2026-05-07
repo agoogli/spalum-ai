@@ -12,7 +12,7 @@ export interface NtfyOptions {
 	tags?: string[];
 }
 
-export async function sendNotification(opts: NtfyOptions): Promise<void> {
+export async function inviaNotification(opts: NtfyOptions): Promise<void> {
 	const url = `${opts.server}/${opts.topic}`;
 
 	const headers: Record<string, string> = {

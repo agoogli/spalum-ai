@@ -88,7 +88,7 @@ async function main() {
 	}
 
 	// ── Manda la notifica ──
-	const isOverdue = waitMs < 0;
+	const isRitardo = waitMs < 0;
 	await inviaNotification({
 		server: config.ntfyServer,
 		topic: config.ntfyTopic,
@@ -101,7 +101,7 @@ async function main() {
 			`Debito:         ${msToHHMM(debitoMs)}\n` +
 			(pausaPranzoMs > 0 ? `Pausa pranzo:   ${msToHHMM(pausaPranzoMs)}\n` : '') +
 			`Uscita teorica: ${fmt(uscitaTeorica)}` +
-			(isOverdue
+			(isRitardo
 				? `\n(${Math.abs(Math.round(waitMs / 60_000))} min di ritardo)`
 				: ''),
 		priority: 'urgent',

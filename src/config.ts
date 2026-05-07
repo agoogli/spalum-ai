@@ -8,11 +8,11 @@ export interface Config {
 	ntfyTopic: string;
 	ntfyServer: string;
 	cookiesFile: string;
-	notifyMinutesBefore: number;
+	minPreavvisoNotifica: number;
 	pausaPranzo: number;
 }
 
-export function loadConfig(): Config {
+export function caricaConfig(): Config {
 	const required = (key: string): string => {
 		const val = process.env[key];
 		if (!val)
@@ -22,10 +22,10 @@ export function loadConfig(): Config {
 		return val;
 	};
 
-	const cookiesFile = process.env.COOKIES_FILE ?? 'cookies.json';
-	if (!fs.existsSync(cookiesFile)) {
+	const fileCookies = process.env.COOKIES_FILE ?? 'cookies.json';
+	if (!fs.existsSync(fileCookies)) {
 		throw new Error(
-			`File cookie non trovato: ${cookiesFile}\n` +
+			`File cookie non trovato: ${fileCookies}\n` +
 				`Esporta i cookie da Chrome (estensione "Get cookies.txt LOCALLY" → formato JSON)\n` +
 				`e monta il file con: -v /percorso/cookies.json:cookies.json:ro,z`
 		);
@@ -35,8 +35,8 @@ export function loadConfig(): Config {
 		targetUrl: required('TARGET_URL'),
 		ntfyTopic: required('NTFY_TOPIC'),
 		ntfyServer: process.env.NTFY_SERVER ?? 'https://ntfy.sh',
-		cookiesFile,
-		notifyMinutesBefore: parseInt(
+		cookiesFile: fileCookies,
+		minPreavvisoNotifica: parseInt(
 			process.env.MIN_PREAVVISO_NOTIFICA_PUSH ?? '5',
 			10
 		),

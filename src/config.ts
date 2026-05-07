@@ -41,7 +41,7 @@ export function caricaConfig(): Config {
 			10
 		),
 		pausaPranzo: parseInt(
-			process.env.PAUSA_PRANZO ?? '10',
+			process.env.MIN_PAUSA_PRANZO ?? '10',
 			10
 		),
 	};

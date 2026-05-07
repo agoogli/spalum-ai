@@ -43,7 +43,7 @@ async function scrapePresenze(config: ReturnType<typeof caricaConfig>) {
 		const page = await context.newPage();
 
 		console.log(`[scraper] Chromium: ${config.targetUrl}`);
-		
+
 		// Retry loop per page.goto in caso di timeout
 		while (true) {
 			try {
@@ -53,12 +53,8 @@ async function scrapePresenze(config: ReturnType<typeof caricaConfig>) {
 				});
 				break; // Successo, esci dal loop
 			} catch (error) {
-				if (error instanceof Error && error.message.includes('timeout')) {
-					console.log(`[scraper] Timeout durante page.goto. Riprovo tra ${MS_RETRY_GOTO / 1000} secondi...`);
-					await sleep(MS_RETRY_GOTO);
-				} else {
-					throw error; // Re-lancia errori non di timeout
-				}
+				console.log(`[scraper] Errore durante page.goto. Riprovo tra ${MS_RETRY_GOTO / 1000} secondi...`);
+				await sleep(MS_RETRY_GOTO);
 			}
 		}
 
@@ -102,7 +98,7 @@ async function main() {
 
 		console.log(
 			`[main] Entrata non ancora presente. ` +
-				`Riprovo tra ${MS_INTERVALLO_CHECK / 60_000} minuti...`
+			`Riprovo tra ${MS_INTERVALLO_CHECK / 60_000} minuti...`
 		);
 		await sleep(MS_INTERVALLO_CHECK);
 	}
@@ -118,17 +114,17 @@ async function main() {
 			tags: ['white_check_mark'],
 		});
 		return;
-	}		
+	}
 
 	// ── Calcola orario uscita teorico ──
 	const debitoMs = parseDebitoMs(debitoRaw);
 	const entrata = timbrature!.entrata!;
-	
+
 	// Aggiungi pausa pranzo se debito > 6 ore
-	const pausaPranzoMs = debitoMs > 6 * 60 * 60 * 1000 
-		? config.pausaPranzo * 60 * 1000 
+	const pausaPranzoMs = debitoMs > 6 * 60 * 60 * 1000
+		? config.pausaPranzo * 60 * 1000
 		: 0;
-	
+
 	const uscitaTeorica = new Date(entrata.getTime() + debitoMs + pausaPranzoMs);
 	const notificaAt = new Date(
 		uscitaTeorica.getTime() - config.minPreavvisoNotifica * 60_000
@@ -137,14 +133,14 @@ async function main() {
 	const waitMs = notificaAt.getTime() - now;
 
 	console.log(
-			`[main] Entrata:        ${fmt(entrata)}\n` +
-			`[main] Debito:         ${msToHHMM(debitoMs)}\n` +
-			(pausaPranzoMs > 0 ? `[main] Pausa pranzo:   ${msToHHMM(pausaPranzoMs)}\n` : '') +
-			`[main] Uscita teorica: ${fmt(uscitaTeorica)}\n` +
-			`[main] Notifica alle:  ${fmt(notificaAt)}` +
-			(waitMs > 0
-				? `  (tra ${msToHHMM(waitMs)})`
-				: `  ← già passata! Invio subito.`)
+		`[main] Entrata:        ${fmt(entrata)}\n` +
+		`[main] Debito:         ${msToHHMM(debitoMs)}\n` +
+		(pausaPranzoMs > 0 ? `[main] Pausa pranzo:   ${msToHHMM(pausaPranzoMs)}\n` : '') +
+		`[main] Uscita teorica: ${fmt(uscitaTeorica)}\n` +
+		`[main] Notifica alle:  ${fmt(notificaAt)}` +
+		(waitMs > 0
+			? `  (tra ${msToHHMM(waitMs)})`
+			: `  ← già passata! Invio subito.`)
 	);
 
 	// ── Attendi esattamente fino all'orario di notifica ──

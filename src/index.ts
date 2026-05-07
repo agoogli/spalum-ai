@@ -14,14 +14,14 @@
  */
 
 import { chromium } from 'playwright';
-import { loadConfig } from './config';
+import { caricaConfig } from './config';
 import { loadCookies } from './cookies';
 import { parseTimbrature, parseDebitoMs, fmt } from './parser';
-import { sendNotification } from './notifier';
+import { inviaNotification } from './notifier';
 
-const SCRAPE_RETRY_INTERVAL_MS = 5 * 60 * 1000; // riprova ogni 5 min se entrata non trovata
+const MS_INTERVALLO_CHECK = 5 * 60 * 1000; // riprova ogni 5 min se entrata non trovata
 
-async function scrapePresenze(config: ReturnType<typeof loadConfig>) {
+async function scrapePresenze(config: ReturnType<typeof caricaConfig>) {
 	const cookies = loadCookies(config.cookiesFile);
 	console.log(`[scraper] Cookie caricati: ${cookies.length}`);
 
@@ -72,7 +72,7 @@ async function scrapePresenze(config: ReturnType<typeof loadConfig>) {
 }
 
 async function main() {
-	const config = loadConfig();
+	const config = caricaConfig();
 
 	// ── Leggi la pagina (con retry se l'utente non ha ancora timbrato l'entrata) ──
 	let debitoRaw = '';
@@ -87,14 +87,14 @@ async function main() {
 
 		console.log(
 			`[main] Entrata non ancora presente. ` +
-				`Riprovo tra ${SCRAPE_RETRY_INTERVAL_MS / 60_000} minuti...`
+				`Riprovo tra ${MS_INTERVALLO_CHECK / 60_000} minuti...`
 		);
-		await sleep(SCRAPE_RETRY_INTERVAL_MS);
+		await sleep(MS_INTERVALLO_CHECK);
 	}
 
 	// ── Se uscita già timbrata, notifica e termina ──	
 	if (timbrature!.uscita !== null) {
-		await sendNotification({
+		await inviaNotification({
 			server: config.ntfyServer,
 			topic: config.ntfyTopic,
 			title: 'Uscita timbrata',
@@ -116,7 +116,7 @@ async function main() {
 	
 	const uscitaTeorica = new Date(entrata.getTime() + debitoMs + pausaPranzoMs);
 	const notificaAt = new Date(
-		uscitaTeorica.getTime() - config.notifyMinutesBefore * 60_000
+		uscitaTeorica.getTime() - config.minPreavvisoNotifica * 60_000
 	);
 	const now = Date.now();
 	const waitMs = notificaAt.getTime() - now;
@@ -140,13 +140,13 @@ async function main() {
 
 	// ── Manda la notifica ──
 	const isOverdue = waitMs < 0;
-	await sendNotification({
+	await inviaNotification({
 		server: config.ntfyServer,
 		topic: config.ntfyTopic,
 		title:
 			waitMs <= 0
 				? 'Puoi uscire adesso!'
-				: `Uscita tra ${config.notifyMinutesBefore} min`,
+				: `Uscita tra ${config.minPreavvisoNotifica} min`,
 		message:
 			`Entrata:        ${fmt(entrata)}\n` +
 			`Debito:         ${msToHHMM(debitoMs)}\n` +

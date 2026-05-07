@@ -108,7 +108,13 @@ async function main() {
 	// ── Calcola orario uscita teorico ──
 	const debitoMs = parseDebitoMs(debitoRaw);
 	const entrata = timbrature!.entrata!;
-	const uscitaTeorica = new Date(entrata.getTime() + debitoMs);
+	
+	// Aggiungi pausa pranzo se debito > 6 ore
+	const pausaPranzoMs = debitoMs > 6 * 60 * 60 * 1000 
+		? config.pausaPranzo * 60 * 1000 
+		: 0;
+	
+	const uscitaTeorica = new Date(entrata.getTime() + debitoMs + pausaPranzoMs);
 	const notificaAt = new Date(
 		uscitaTeorica.getTime() - config.notifyMinutesBefore * 60_000
 	);
@@ -118,6 +124,7 @@ async function main() {
 	console.log(
 			`[main] Entrata:        ${fmt(entrata)}\n` +
 			`[main] Debito:         ${msToHHMM(debitoMs)}\n` +
+			(pausaPranzoMs > 0 ? `[main] Pausa pranzo:   ${msToHHMM(pausaPranzoMs)}\n` : '') +
 			`[main] Uscita teorica: ${fmt(uscitaTeorica)}\n` +
 			`[main] Notifica alle:  ${fmt(notificaAt)}` +
 			(waitMs > 0
@@ -143,6 +150,7 @@ async function main() {
 		message:
 			`Entrata:        ${fmt(entrata)}\n` +
 			`Debito:         ${msToHHMM(debitoMs)}\n` +
+			(pausaPranzoMs > 0 ? `Pausa pranzo:   ${msToHHMM(pausaPranzoMs)}\n` : '') +
 			`Uscita teorica: ${fmt(uscitaTeorica)}` +
 			(isOverdue
 				? `\n(${Math.abs(Math.round(waitMs / 60_000))} min di ritardo)`

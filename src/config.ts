@@ -9,6 +9,7 @@ export interface Config {
 	ntfyServer: string;
 	cookiesFile: string;
 	notifyMinutesBefore: number;
+	pausaPranzo: number;
 }
 
 export function loadConfig(): Config {
@@ -37,6 +38,10 @@ export function loadConfig(): Config {
 		cookiesFile,
 		notifyMinutesBefore: parseInt(
 			process.env.MIN_PREAVVISO_NOTIFICA_PUSH ?? '5',
+			10
+		),
+		pausaPranzo: parseInt(
+			process.env.PAUSA_PRANZO ?? '10',
 			10
 		),
 	};

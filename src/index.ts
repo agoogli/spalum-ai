@@ -20,6 +20,7 @@ import { parseTimbrature, parseDebitoMs, fmt } from './parser';
 import { inviaNotification } from './notifier';
 
 const MS_INTERVALLO_CHECK = 5 * 60 * 1000; // riprova ogni 5 min se entrata non trovata
+const MS_RETRY_GOTO = 60 * 1000; // riprova ogni 60 secondi in caso di timeout page.goto
 
 async function scrapePresenze(config: ReturnType<typeof caricaConfig>) {
 	const cookies = loadCookies(config.cookiesFile);
@@ -42,10 +43,24 @@ async function scrapePresenze(config: ReturnType<typeof caricaConfig>) {
 		const page = await context.newPage();
 
 		console.log(`[scraper] Chromium: ${config.targetUrl}`);
-		await page.goto(config.targetUrl, {
-			waitUntil: 'networkidle',
-			timeout: 30_000,
-		});
+		
+		// Retry loop per page.goto in caso di timeout
+		while (true) {
+			try {
+				await page.goto(config.targetUrl, {
+					waitUntil: 'networkidle',
+					timeout: 30_000,
+				});
+				break; // Successo, esci dal loop
+			} catch (error) {
+				if (error instanceof Error && error.message.includes('timeout')) {
+					console.log(`[scraper] Timeout durante page.goto. Riprovo tra ${MS_RETRY_GOTO / 1000} secondi...`);
+					await sleep(MS_RETRY_GOTO);
+				} else {
+					throw error; // Re-lancia errori non di timeout
+				}
+			}
+		}
 
 		const debitoRaw =
 			(

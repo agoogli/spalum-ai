@@ -36,7 +36,7 @@ export function loadConfig(): Config {
 		ntfyServer: process.env.NTFY_SERVER ?? 'https://ntfy.sh',
 		cookiesFile,
 		notifyMinutesBefore: parseInt(
-			process.env.NOTIFY_MINUTES_BEFORE ?? '5',
+			process.env.MIN_PREAVVISO_NOTIFICA_PUSH ?? '5',
 			10
 		),
 	};

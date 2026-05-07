@@ -8,7 +8,7 @@
  *  4. Chiude il browser
  *  5. Calcola esattamente quando inviare la notifica:
  *       uscita_teorica = entrata + debito
- *       notifica_at    = uscita_teorica - NOTIFY_MINUTES_BEFORE
+ *       notifica_at    = uscita_teorica - MIN_PREAVVISO_NOTIFICA_PUSH
  *  6. Attende con un singolo setTimeout fino a quell'istante
  *  7. Manda la notifica e termina
  */
@@ -41,7 +41,7 @@ async function scrapePresenze(config: ReturnType<typeof loadConfig>) {
 		await context.addCookies(cookies);
 		const page = await context.newPage();
 
-		console.log(`[scraper] Navigazione: ${config.targetUrl}`);
+		console.log(`[scraper] Chromium: ${config.targetUrl}`);
 		await page.goto(config.targetUrl, {
 			waitUntil: 'networkidle',
 			timeout: 30_000,
@@ -60,9 +60,9 @@ async function scrapePresenze(config: ReturnType<typeof loadConfig>) {
 					.textContent({ timeout: 10_000 })
 			)?.trim() ?? '';
 
-		console.log(`[scraper] #ext-element-96  (debito):     "${debitoRaw}"`);
+		console.log(`[scraper] (campo debito): "${debitoRaw}"`);
 		console.log(
-			`[scraper] #ext-element-120 (timbrature): "${timbratureRaw}"`
+			`[scraper] (campo timbrature): "${timbratureRaw}"`
 		);
 
 		return { debitoRaw, timbratureRaw };
@@ -92,18 +92,18 @@ async function main() {
 		await sleep(SCRAPE_RETRY_INTERVAL_MS);
 	}
 
-	// ── Se uscita già timbrata, notifica e termina ──
+	// ── Se uscita già timbrata, notifica e termina ──	
 	if (timbrature!.uscita !== null) {
 		await sendNotification({
 			server: config.ntfyServer,
 			topic: config.ntfyTopic,
-			title: 'Uscita già timbrata',
+			title: 'Uscita timbrata',
 			message: `Uscita registrata alle ${fmt(timbrature!.uscita)}.`,
-			priority: 'low',
+			priority: 'urgent',
 			tags: ['white_check_mark'],
 		});
 		return;
-	}
+	}		
 
 	// ── Calcola orario uscita teorico ──
 	const debitoMs = parseDebitoMs(debitoRaw);
@@ -116,7 +116,7 @@ async function main() {
 	const waitMs = notificaAt.getTime() - now;
 
 	console.log(
-		`[main] Entrata:        ${fmt(entrata)}\n` +
+			`[main] Entrata:        ${fmt(entrata)}\n` +
 			`[main] Debito:         ${msToHHMM(debitoMs)}\n` +
 			`[main] Uscita teorica: ${fmt(uscitaTeorica)}\n` +
 			`[main] Notifica alle:  ${fmt(notificaAt)}` +
@@ -127,7 +127,7 @@ async function main() {
 
 	// ── Attendi esattamente fino all'orario di notifica ──
 	if (waitMs > 0) {
-		console.log(`[main] Processo in sleep per ${msToHHMM(waitMs)}...`);
+		console.log(`[main] Processo in attesa per ${msToHHMM(waitMs)}...`);
 		await sleep(waitMs);
 	}
 
@@ -148,7 +148,7 @@ async function main() {
 				? `\n(${Math.abs(Math.round(waitMs / 60_000))} min di ritardo)`
 				: ''),
 		priority: 'urgent',
-		tags: ['tada', 'door'],
+		tags: ['dove_of_peace', 'dove_of_peace', 'tada', 'door'],
 	});
 
 	console.log('[main] Notifica inviata. Uscita dal processo.');
